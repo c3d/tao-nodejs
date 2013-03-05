@@ -25,6 +25,7 @@
 #include "tree.h"
 #include "tao/module_api.h"
 #include <QMap>
+#include <QProcess>
 #include <QString>
 #include <iostream>
 
@@ -48,6 +49,7 @@ public:
     static XL::Name_p      nodejs_exec(text name, text file);
 
 public:
+    bool                   init();
     void                   stopAll();
 
 protected:
@@ -63,6 +65,38 @@ protected:
 protected:
     static NodeJSFactory * inst;
 };
+
+
+class NodeJSProcess : public QProcess
+// ----------------------------------------------------------------------------
+//    A NodeJS subprocess
+// ----------------------------------------------------------------------------
+{
+
+};
+
+
+// ============================================================================
+//
+//    Helpers
+//
+// ============================================================================
+
+inline QString operator +(std::string s)
+// ----------------------------------------------------------------------------
+//   UTF-8 conversion from std::string to QString
+// ----------------------------------------------------------------------------
+{
+    return QString::fromUtf8(s.data(), s.length());
+}
+
+inline std::string operator +(QString s)
+// ----------------------------------------------------------------------------
+//   UTF-8 conversion from QString to std::string
+// ----------------------------------------------------------------------------
+{
+    return std::string(s.toUtf8().constData());
+}
 
 
 #endif // NODEJS_H

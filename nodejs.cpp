@@ -39,8 +39,11 @@ XL::Name_p NodeJSFactory::nodejs_exec(text name, text file)
 //   Start a NodeJS subprocess
 // ----------------------------------------------------------------------------
 {
-    Q_UNUSED(name);
     Q_UNUSED(file);
+
+    NodeJSFactory * factory = instance();
+    if (factory->processes.contains(+name))
+        return XL::xl_true;
 
     return XL::xl_false;
 }
@@ -67,6 +70,28 @@ std::ostream & NodeJSFactory::debug()
 }
 
 
+bool NodeJSFactory::init()
+// ----------------------------------------------------------------------------
+//   Initialize the factory, return true on success
+// ----------------------------------------------------------------------------
+{
+    QString prog = "node";
+    QStringList args;
+    args << "-v";
+    QProcess node;
+    node.start(prog, args);
+    if (node.waitForFinished())
+    {
+        IFTRACE(nodejs)
+            debug() << "Module initialized\n";
+        return true;
+    }
+    IFTRACE(nodejs)
+        debug() << "Failed to execute 'node' command\n";
+    return false;
+}
+
+
 void NodeJSFactory::stopAll()
 // ----------------------------------------------------------------------------
 //   Stop all subprocesses
@@ -84,7 +109,10 @@ int module_init(const Tao::ModuleApi *api, const Tao::ModuleInfo *mod)
 {
     Q_UNUSED(mod);
     XL_INIT_TRACES();
-    NodeJSFactory::instance(api);
+    NodeJSFactory * factory = NodeJSFactory::instance(api);
+    if (!factory->init())
+        return -1;
+
     return 0;
 }
 
