@@ -1,0 +1,21 @@
+// NodeJS module definition
+//
+// Execute JavaScript code inside a NodeJS subprocess. Call JavaScript from Tao and vice versa. 
+//
+// Copyright 2013 Taodyne SAS
+
+module_description
+    id "30312D18-B71B-4934-8DD4-7B791EC472E4" 
+    name "NodeJS interface"
+    description "Execute JavaScript code inside a NodeJS subprocess. " &
+                "Call JavaScript from Tao and vice versa."
+    import_name "NodeJS"
+    author "Taodyne SAS"
+    website "http://www.taodyne.com"
+    version 1.0
+
+
+module_description "fr",
+    name "Interface NodeJS"
+    description "Permet d'exécuter du code JavaScript dans un processus " &
+                "NodeJS, d'appeler du JavaScript depuis Tao et réciproquement."
