@@ -52,8 +52,13 @@ public:
     static void            destroy();
 
     // XL interface
-    static XL::Name_p      nodejs(text name, text src);
-    static XL::Name_p      nodejs(text src) { return nodejs("default", src); }
+    static XL::Name_p      nodejs(XL::Context *context, XL::Tree_p self,
+                                  text name, text src);
+    static XL::Name_p      nodejs(XL::Context *context, XL::Tree_p self,
+                                  text src)
+    {
+        return nodejs(context, self, "default", src);
+    }
 
 public:
     bool                   init();
@@ -95,6 +100,9 @@ public:
     NodeJSProcess(QObject *parent, const QString name, const QString src);
     virtual ~NodeJSProcess();
 
+public:
+    void                   runCallbacks(XL::Context *context, XL::Tree_p self);
+
 protected:
     std::ostream &         debug();
 
@@ -107,6 +115,7 @@ public:
 
 protected:
     QByteArray             out;
+    QStringList            commands;
 };
 
 

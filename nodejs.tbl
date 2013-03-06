@@ -25,14 +25,14 @@
 PREFIX(NodeJS,  tree,  "nodejs",
        PARM(n, text, "The name of the NodeJS subprocess")
        PARM(s, text, "JavaScript source code to execute"),
-       return NodeJSFactory::nodejs(n, s),
+       return NodeJSFactory::nodejs(context, self, n, s),
        GROUP(pointcloud)
        SYNOPSIS("Start a NodeJS subprocess.")
        DESCRIPTION("Executes the specified JavaScript source in a subprocess."))
 
 PREFIX(NodeJSDefault,  tree,  "nodejs",
        PARM(s, text, "JavaScript source code to execute"),
-       return NodeJSFactory::nodejs(s),
+       return NodeJSFactory::nodejs(context, self, s),
        GROUP(pointcloud)
        SYNOPSIS("Start a NodeJS subprocess.")
        DESCRIPTION("Executes the specified JavaScript source in a subprocess."))

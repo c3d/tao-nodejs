@@ -21,6 +21,10 @@
 // ****************************************************************************
 
 #include "nodejs.h"
+#include "runtime.h"
+#include "context.h"
+#include <QRegExp>
+#include <QEvent>
 
 
 NodeJSFactory * NodeJSFactory::inst = NULL;
@@ -41,12 +45,14 @@ NodeJSFactory::~NodeJSFactory()
 {}
 
 
-XL::Name_p NodeJSFactory::nodejs(text name, text src)
+XL::Name_p NodeJSFactory::nodejs(XL::Context *context, XL::Tree_p self,
+                                 text name, text src)
 // ----------------------------------------------------------------------------
 //   Start a NodeJS subprocess to execute JavaScript code
 // ----------------------------------------------------------------------------
 {
     NodeJSFactory * f = instance();
+    f->tao->refreshOn(QEvent::Timer, f->tao->currentTime() + 0.1 /*-1.0*/);
     if (f->processes.contains(+name))
     {
         NodeJSProcess * proc = f->processes[+name];
@@ -56,6 +62,12 @@ XL::Name_p NodeJSFactory::nodejs(text name, text src)
                 f->debug() << "Source code changed\n";
             delete proc;
             f->run(name, src);
+        }
+        else
+        {
+            // See if we have pending callbacks to run in the XL context
+            proc->runCallbacks(context, self);
+            Q_UNUSED(context);
         }
         return XL::xl_true;
     }
@@ -183,19 +195,32 @@ std::ostream & NodeJSProcess::debug()
 
 void NodeJSProcess::onReadyReadStandardOutput()
 // ----------------------------------------------------------------------------
-//   Read standard output of subprocess
+//   Read standard output of subprocess, filter out callback requests
 // ----------------------------------------------------------------------------
 {
     QByteArray ba = readAllStandardOutput();
-    std::cout << +QString::fromLocal8Bit(ba);
-
     out.append(ba);
     int eol = out.indexOf('\n');
     while (eol >= 0)
     {
         QByteArray line = out.left(eol);
+        QString sline = QString::fromLocal8Bit(line);
         IFTRACE(nodejs)
-            debug() << "stdout [" << +QString::fromLocal8Bit(line) << "]\n";
+            debug() << "stdout [" << +sline << "]\n";
+
+        static QRegExp re("^CB/(.*)");
+        if (re.indexIn(sline) != -1)
+        {
+            // Callback command for Tao
+            IFTRACE(nodejs)
+                debug() << "Pushing callback request\n";
+            commands.append(re.cap(1));
+        }
+        else
+        {
+            // Any other output is forwarded to Tao's stdout
+            std::cout << +sline << "\n";
+        }
 
         int keep = out.length() - eol - 1;
         Q_ASSERT(keep >= 0);
@@ -211,6 +236,28 @@ void NodeJSProcess::onReadyReadStandardError()
 // ----------------------------------------------------------------------------
 {
     std::cerr << +QString::fromLocal8Bit(readAllStandardError());
+}
+
+
+void NodeJSProcess::runCallbacks(XL::Context *context, XL::Tree_p self)
+// ----------------------------------------------------------------------------
+//   Execute pending callbacks in given context
+// ----------------------------------------------------------------------------
+{
+    Q_UNUSED(context);
+    while (!commands.isEmpty())
+    {
+        std::string code = +commands.takeFirst();
+        IFTRACE(nodejs)
+            debug() << "Execute callback: " << code << "\n";
+
+        XL::Tree *tree = XL::xl_parse_text(code);
+        if (!tree)
+            return;
+        if (XL::Symbols *syms = self->Symbols())
+            tree->SetSymbols(syms);
+        context->Evaluate(tree);
+    }
 }
 
 
