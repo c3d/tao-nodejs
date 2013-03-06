@@ -46,11 +46,21 @@ XL::Name_p NodeJSFactory::nodejs(text name, text src)
 //   Start a NodeJS subprocess to execute JavaScript code
 // ----------------------------------------------------------------------------
 {
-    NodeJSFactory * factory = instance();
-    if (factory->processes.contains(+name))
+    NodeJSFactory * f = instance();
+    if (f->processes.contains(+name))
+    {
+        NodeJSProcess * proc = f->processes[+name];
+        if (+src != proc->src)
+        {
+            IFTRACE(nodejs)
+                f->debug() << "Source code changed\n";
+            delete proc;
+            f->run(name, src);
+        }
         return XL::xl_true;
+    }
 
-    factory->run(name, src);
+    f->run(name, src);
     return XL::xl_true;
 }
 
@@ -130,7 +140,7 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 // ----------------------------------------------------------------------------
 //   Create and start a subprocess and make it run the specified code
 // ----------------------------------------------------------------------------
-    : QProcess(parent), name(name)
+    : QProcess(parent), name(name), src(src)
 {
     IFTRACE(nodejs)
         debug() << "Starting\n";
@@ -154,6 +164,7 @@ NodeJSProcess::~NodeJSProcess()
 {
     IFTRACE(nodejs)
         debug() << "Destructor\n";
+    close();
 }
 
 
@@ -172,14 +183,16 @@ void NodeJSProcess::onReadyReadStandardOutput()
 //   Read standard output of subprocess
 // ----------------------------------------------------------------------------
 {
-    out.append(readAllStandardOutput());
+    QByteArray ba = readAllStandardOutput();
+    std::cout << +QString::fromLocal8Bit(ba);
+
+    out.append(ba);
     int eol = out.indexOf('\n');
     while (eol >= 0)
     {
         QByteArray line = out.left(eol);
-        QString sline = QString::fromLocal8Bit(line);
         IFTRACE(nodejs)
-            debug() << "stdout [" << +sline << "]\n";
+            debug() << "stdout [" << +QString::fromLocal8Bit(line) << "]\n";
 
         int keep = out.length() - eol - 1;
         Q_ASSERT(keep >= 0);
@@ -194,9 +207,7 @@ void NodeJSProcess::onReadyReadStandardError()
 //   Read standard error of subprocess
 // ----------------------------------------------------------------------------
 {
-    QByteArray err = readAllStandardError();
-    QString serr = QString::fromLocal8Bit(err);
-    std::cerr << +serr;
+    std::cerr << +QString::fromLocal8Bit(readAllStandardError());
 }
 
 

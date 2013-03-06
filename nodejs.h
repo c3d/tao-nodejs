@@ -100,8 +100,10 @@ protected slots:
     void                   onReadyReadStandardOutput();
     void                   onReadyReadStandardError();
 
+public:
+    QString                name, src;
+
 protected:
-    QString                name;
     QByteArray             out;
 };
 
