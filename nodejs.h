@@ -67,9 +67,11 @@ protected:
 protected:
     typedef QMap<QString, NodeJSProcess *>  proc_map;
 
+public:
+    const Tao::ModuleApi * tao;
+
 protected:
     proc_map               processes;
-    const Tao::ModuleApi * tao;
 
 protected:
     static NodeJSFactory * inst;

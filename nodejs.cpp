@@ -142,8 +142,11 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 // ----------------------------------------------------------------------------
     : QProcess(parent), name(name), src(src)
 {
+    std::string path = NodeJSFactory::instance()->tao->currentDocumentFolder();
+    setWorkingDirectory(+path);
+
     IFTRACE(nodejs)
-        debug() << "Starting\n";
+        debug() << "Starting node process (wd: " << path << ")\n";
 
     connect(this, SIGNAL(readyReadStandardOutput()),
             this, SLOT(onReadyReadStandardOutput()));
