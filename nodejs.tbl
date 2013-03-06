@@ -22,10 +22,17 @@
 
 #include "nodejs.h"
 
-PREFIX(Node,  tree,  "nodejs_exec",
+PREFIX(NodeJS,  tree,  "nodejs",
        PARM(n, text, "The name of the NodeJS subprocess")
-       PARM(s, text, "Path to the JavaScript source code to execute"),
-       return NodeJSFactory::nodejs_exec(n, s),
+       PARM(s, text, "JavaScript source code to execute"),
+       return NodeJSFactory::nodejs(n, s),
+       GROUP(pointcloud)
+       SYNOPSIS("Start a NodeJS subprocess.")
+       DESCRIPTION("Executes the specified JavaScript source in a subprocess."))
+
+PREFIX(NodeJSDefault,  tree,  "nodejs",
+       PARM(s, text, "JavaScript source code to execute"),
+       return NodeJSFactory::nodejs(s),
        GROUP(pointcloud)
        SYNOPSIS("Start a NodeJS subprocess.")
        DESCRIPTION("Executes the specified JavaScript source in a subprocess."))

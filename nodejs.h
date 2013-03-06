@@ -30,27 +30,36 @@
 #include <iostream>
 
 
+// ============================================================================
+//
+//    Process factory
+//
+// ============================================================================
+
 class NodeJSProcess;
 
-class NodeJSFactory
+class NodeJSFactory : public QObject
 // ----------------------------------------------------------------------------
 //    Create, store and manage NodeJS subprocesses
 // ----------------------------------------------------------------------------
 {
 public:
     NodeJSFactory(const Tao::ModuleApi *tao = 0);
-    virtual ~NodeJSFactory() {}
+    virtual ~NodeJSFactory();
 
 public:
     static NodeJSFactory * instance(const Tao::ModuleApi *tao = 0);
     static void            destroy();
 
     // XL interface
-    static XL::Name_p      nodejs_exec(text name, text file);
+    static XL::Name_p      nodejs(text name, text src);
+    static XL::Name_p      nodejs(text src) { return nodejs("default", src); }
 
 public:
     bool                   init();
     void                   stopAll();
+
+    NodeJSProcess *        run(text name, text src);
 
 protected:
     std::ostream &         debug();
@@ -67,12 +76,31 @@ protected:
 };
 
 
+// ============================================================================
+//
+//    NodeJS subprocess
+//
+// ============================================================================
+
 class NodeJSProcess : public QProcess
 // ----------------------------------------------------------------------------
 //    A NodeJS subprocess
 // ----------------------------------------------------------------------------
 {
+    Q_OBJECT
 
+public:
+    NodeJSProcess(QObject *parent, const QString name, const QString src);
+    virtual ~NodeJSProcess();
+
+protected:
+    std::ostream &         debug();
+
+protected slots:
+    void                   onReadyReadStandardOutput();
+
+protected:
+    QString                name;
 };
 
 

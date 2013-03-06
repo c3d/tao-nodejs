@@ -34,18 +34,24 @@ NodeJSFactory::NodeJSFactory(const Tao::ModuleApi *tao)
 {}
 
 
-XL::Name_p NodeJSFactory::nodejs_exec(text name, text file)
+NodeJSFactory::~NodeJSFactory()
 // ----------------------------------------------------------------------------
-//   Start a NodeJS subprocess
+//   Factory destructor
+// ----------------------------------------------------------------------------
+{}
+
+
+XL::Name_p NodeJSFactory::nodejs(text name, text src)
+// ----------------------------------------------------------------------------
+//   Start a NodeJS subprocess to execute JavaScript code
 // ----------------------------------------------------------------------------
 {
-    Q_UNUSED(file);
-
     NodeJSFactory * factory = instance();
     if (factory->processes.contains(+name))
         return XL::xl_true;
 
-    return XL::xl_false;
+    factory->run(name, src);
+    return XL::xl_true;
 }
 
 
@@ -97,8 +103,86 @@ void NodeJSFactory::stopAll()
 //   Stop all subprocesses
 // ----------------------------------------------------------------------------
 {
+    foreach (NodeJSProcess * proc, processes)
+        delete proc;
 }
 
+
+NodeJSProcess * NodeJSFactory::run(text name, text src)
+// ----------------------------------------------------------------------------
+//   Create new NodeJS subprocess named 'name' to run 'src'
+// ----------------------------------------------------------------------------
+{
+    NodeJSProcess * proc = new NodeJSProcess(this, +name, +src);
+    processes[+name] = proc;
+    return proc;
+}
+
+
+// ============================================================================
+//
+//    NodeJS subprocess
+//
+// ============================================================================
+
+NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
+                             const QString src)
+// ----------------------------------------------------------------------------
+//   Create and start a subprocess and make it run the specified code
+// ----------------------------------------------------------------------------
+    : QProcess(parent), name(name)
+{
+    IFTRACE(nodejs)
+        debug() << "Starting\n";
+
+    connect(this, SIGNAL(readyReadStandardOutput()),
+            this, SLOT(onReadyReadStandardOutput()));
+
+    Q_UNUSED(src);
+    QString node = "node";
+    QStringList args;
+    args << "-e" << src;
+    start(node, args);
+}
+
+
+NodeJSProcess::~NodeJSProcess()
+// ----------------------------------------------------------------------------
+//   Stop/kill subprocess
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(nodejs)
+        debug() << "Destructor\n";
+}
+
+
+std::ostream & NodeJSProcess::debug()
+// ----------------------------------------------------------------------------
+//   Convenience method to log with a common prefix
+// ----------------------------------------------------------------------------
+{
+    std::cerr << "[NodeJS '" << +name << "'] ";
+    return std::cerr;
+}
+
+
+void NodeJSProcess::onReadyReadStandardOutput()
+// ----------------------------------------------------------------------------
+//   Read standard output of subprocess
+// ----------------------------------------------------------------------------
+{
+    QByteArray ba = readAllStandardOutput();
+    QString out = QString::fromLocal8Bit(ba.data());
+    IFTRACE(nodejs)
+        debug() << "Read: " << +out << "\n";
+}
+
+
+// ============================================================================
+//
+//    Globals
+//
+// ============================================================================
 
 XL_DEFINE_TRACES
 
