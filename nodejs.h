@@ -98,9 +98,11 @@ protected:
 
 protected slots:
     void                   onReadyReadStandardOutput();
+    void                   onReadyReadStandardError();
 
 protected:
     QString                name;
+    QByteArray             out;
 };
 
 

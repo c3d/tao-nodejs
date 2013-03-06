@@ -137,8 +137,9 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 
     connect(this, SIGNAL(readyReadStandardOutput()),
             this, SLOT(onReadyReadStandardOutput()));
+    connect(this, SIGNAL(readyReadStandardError()),
+            this, SLOT(onReadyReadStandardError()));
 
-    Q_UNUSED(src);
     QString node = "node";
     QStringList args;
     args << "-e" << src;
@@ -171,10 +172,31 @@ void NodeJSProcess::onReadyReadStandardOutput()
 //   Read standard output of subprocess
 // ----------------------------------------------------------------------------
 {
-    QByteArray ba = readAllStandardOutput();
-    QString out = QString::fromLocal8Bit(ba.data());
-    IFTRACE(nodejs)
-        debug() << "Read: " << +out << "\n";
+    out.append(readAllStandardOutput());
+    int eol = out.indexOf('\n');
+    while (eol >= 0)
+    {
+        QByteArray line = out.left(eol);
+        QString sline = QString::fromLocal8Bit(line);
+        IFTRACE(nodejs)
+            debug() << "stdout [" << +sline << "]\n";
+
+        int keep = out.length() - eol - 1;
+        Q_ASSERT(keep >= 0);
+        out = out.right(keep);
+        eol = out.indexOf('\n');
+    }
+}
+
+
+void NodeJSProcess::onReadyReadStandardError()
+// ----------------------------------------------------------------------------
+//   Read standard error of subprocess
+// ----------------------------------------------------------------------------
+{
+    QByteArray err = readAllStandardError();
+    QString serr = QString::fromLocal8Bit(err);
+    std::cerr << +serr;
 }
 
 
