@@ -77,6 +77,21 @@ XL::Name_p NodeJSFactory::nodejs(XL::Context *context, XL::Tree_p self,
 }
 
 
+XL::Name_p NodeJSFactory::nodejs_writeln(text name, text msg)
+// ----------------------------------------------------------------------------
+//   Send text to the standard input of a subprocess
+// ----------------------------------------------------------------------------
+{
+    NodeJSFactory * f = instance();
+    if (!f->processes.contains(+name))
+        return XL::xl_false;
+
+    NodeJSProcess * proc = f->processes[+name];
+    proc->writeToStdin(msg);
+    return XL::xl_true;
+}
+
+
 NodeJSFactory * NodeJSFactory::instance(const Tao::ModuleApi *tao)
 // ----------------------------------------------------------------------------
 //   Create/return instance of the factory
@@ -259,6 +274,20 @@ void NodeJSProcess::runCallbacks(XL::Context *context, XL::Tree_p self)
         context->Evaluate(tree);
     }
 }
+
+
+void NodeJSProcess::writeToStdin(text msg)
+// ----------------------------------------------------------------------------
+//   Send text to the standard input of the process
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(nodejs)
+        debug() << "stdin [" << msg << "]\n";
+    QByteArray ba = QByteArray::fromRawData(msg.c_str(), msg.size());
+    write(ba);
+    write("\n");
+}
+
 
 
 // ============================================================================

@@ -59,6 +59,11 @@ public:
     {
         return nodejs(context, self, "default", src);
     }
+    static XL::Name_p      nodejs_writeln(text name, text msg);
+    static XL::Name_p      nodejs_writeln(text msg)
+    {
+        return nodejs_writeln("default", msg);
+    }
 
 public:
     bool                   init();
@@ -102,6 +107,7 @@ public:
 
 public:
     void                   runCallbacks(XL::Context *context, XL::Tree_p self);
+    void                   writeToStdin(text msg);
 
 protected:
     std::ostream &         debug();

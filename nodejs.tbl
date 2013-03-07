@@ -35,4 +35,20 @@ PREFIX(NodeJSDefault,  tree,  "nodejs",
        return NodeJSFactory::nodejs(context, self, s),
        GROUP(pointcloud)
        SYNOPSIS("Start a NodeJS subprocess.")
-       DESCRIPTION("Executes the specified JavaScript source in a subprocess."))
+       DESCRIPTION("Executes the specified JavaScript source in a subprocess "
+                   "with name 'default'."))
+
+PREFIX(NodeJSWriteln,  tree,  "nodejs_writeln",
+       PARM(n, text, "The name of the NodeJS subprocess")
+       PARM(t, text, "The text to send to the standard input channel of the subprocess."),
+       return NodeJSFactory::nodejs_writeln(n, t),
+       GROUP(pointcloud)
+       SYNOPSIS("Send text to a NodeJS subprocess")
+       DESCRIPTION("The text sent to the subprocess may be evaluated by the "
+                   "JavaScript code to implement remote callbacks."))
+
+PREFIX(NodeJSWritelnDefault,  tree,  "nodejs_writeln",
+       PARM(t, text, "The text to send to the standard input channel of the subprocess."),
+       return NodeJSFactory::nodejs_writeln(t),
+       GROUP(pointcloud)
+       SYNOPSIS("Send text to the default NodeJS subprocess"))
