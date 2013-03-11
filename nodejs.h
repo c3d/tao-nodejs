@@ -59,6 +59,14 @@ public:
     {
         return nodejs(context, self, "default", src);
     }
+    static XL::Name_p      nodejs_load(XL::Context *context, XL::Tree_p self,
+                                  text name, text file);
+    static XL::Name_p      nodejs_load(XL::Context *context, XL::Tree_p self,
+                                  text file)
+    {
+        return nodejs_load(context, self, "default", file);
+    }
+
     static XL::Name_p      nodejs_writeln(text name, text msg);
     static XL::Name_p      nodejs_writeln(text msg)
     {
@@ -70,6 +78,7 @@ public:
     void                   stopAll();
 
     NodeJSProcess *        run(text name, text src);
+    NodeJSProcess *        runFile(text name, text file);
 
 protected:
     std::ostream &         debug();
@@ -103,6 +112,8 @@ class NodeJSProcess : public QProcess
 
 public:
     NodeJSProcess(QObject *parent, const QString name, const QString src);
+    NodeJSProcess(QObject *parent, const QString name, const QString file,
+                  bool unused);
     virtual ~NodeJSProcess();
 
 public:
@@ -117,7 +128,7 @@ protected slots:
     void                   onReadyReadStandardError();
 
 public:
-    QString                name, src;
+    QString                name, src, file;
 
 protected:
     QByteArray             out;

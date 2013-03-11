@@ -77,6 +77,37 @@ XL::Name_p NodeJSFactory::nodejs(XL::Context *context, XL::Tree_p self,
 }
 
 
+XL::Name_p NodeJSFactory::nodejs_load(XL::Context *context, XL::Tree_p self,
+                                      text name, text file)
+// ----------------------------------------------------------------------------
+//   Start a NodeJS subprocess to execute JavaScript code from file
+// ----------------------------------------------------------------------------
+{
+    NodeJSFactory * f = instance();
+    f->tao->refreshOn(QEvent::Timer, f->tao->currentTime() + 0.1 /*-1.0*/);
+    if (f->processes.contains(+name))
+    {
+        NodeJSProcess * proc = f->processes[+name];
+        if (+file != proc->file)
+        {
+            IFTRACE(nodejs)
+                f->debug() << "File name changed\n";
+            delete proc;
+            f->runFile(name, file);
+        }
+        else
+        {
+            // See if we have pending callbacks to run in the XL context
+            proc->runCallbacks(context, self);
+        }
+        return XL::xl_true;
+    }
+
+    f->runFile(name, file);
+    return XL::xl_true;
+}
+
+
 XL::Name_p NodeJSFactory::nodejs_writeln(text name, text msg)
 // ----------------------------------------------------------------------------
 //   Send text to the standard input of a subprocess
@@ -156,6 +187,17 @@ NodeJSProcess * NodeJSFactory::run(text name, text src)
 }
 
 
+NodeJSProcess * NodeJSFactory::runFile(text name, text file)
+// ----------------------------------------------------------------------------
+//   Create new NodeJS subprocess named 'name' to run file 'file'
+// ----------------------------------------------------------------------------
+{
+    NodeJSProcess * proc = new NodeJSProcess(this, +name, +file, false);
+    processes[+name] = proc;
+    return proc;
+}
+
+
 // ============================================================================
 //
 //    NodeJS subprocess
@@ -183,6 +225,33 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
     QString node = "node";
     QStringList args;
     args << "-e" << src;
+    start(node, args);
+}
+
+
+NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
+                             const QString file, bool unused)
+// ----------------------------------------------------------------------------
+//   Create and start a subprocess and make it run the specified source file
+// ----------------------------------------------------------------------------
+    : QProcess(parent), name(name), file(file)
+{
+    Q_UNUSED(unused);
+
+    std::string path = NodeJSFactory::instance()->tao->currentDocumentFolder();
+    setWorkingDirectory(+path);
+
+    IFTRACE(nodejs)
+        debug() << "Starting node process (wd: " << path << ")\n";
+
+    connect(this, SIGNAL(readyReadStandardOutput()),
+            this, SLOT(onReadyReadStandardOutput()));
+    connect(this, SIGNAL(readyReadStandardError()),
+            this, SLOT(onReadyReadStandardError()));
+
+    QString node = "node";
+    QStringList args;
+    args << file;
     start(node, args);
 }
 
