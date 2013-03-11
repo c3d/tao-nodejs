@@ -122,17 +122,24 @@ public:
 
 protected:
     std::ostream &         debug();
+    void                   fileChanged();
+
+protected:
+    static void            fileChangedStatic(std::string path,
+                                             std::string absolutePath,
+                                             void *obj);
 
 protected slots:
     void                   onReadyReadStandardOutput();
     void                   onReadyReadStandardError();
 
 public:
-    QString                name, src, file;
+    QString                name, src, file, error;
 
 protected:
     QByteArray             out;
     QStringList            commands;
+    void *                 fileMonitor;
 };
 
 

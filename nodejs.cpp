@@ -23,8 +23,10 @@
 #include "nodejs.h"
 #include "runtime.h"
 #include "context.h"
-#include <QRegExp>
+#include <QDir>
 #include <QEvent>
+#include <QFileInfo>
+#include <QRegExp>
 
 
 NodeJSFactory * NodeJSFactory::inst = NULL;
@@ -209,7 +211,7 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 // ----------------------------------------------------------------------------
 //   Create and start a subprocess and make it run the specified code
 // ----------------------------------------------------------------------------
-    : QProcess(parent), name(name), src(src)
+    : QProcess(parent), name(name), src(src), fileMonitor(NULL)
 {
     std::string path = NodeJSFactory::instance()->tao->currentDocumentFolder();
     setWorkingDirectory(+path);
@@ -234,11 +236,33 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 // ----------------------------------------------------------------------------
 //   Create and start a subprocess and make it run the specified source file
 // ----------------------------------------------------------------------------
-    : QProcess(parent), name(name), file(file)
+    : QProcess(parent), name(name), file(file), fileMonitor(NULL)
 {
     Q_UNUSED(unused);
 
-    std::string path = NodeJSFactory::instance()->tao->currentDocumentFolder();
+    const Tao::ModuleApi * tao = NodeJSFactory::instance()->tao;
+    std::string path = tao->currentDocumentFolder();
+
+    // Resolve file path relative to document folder
+    QString qf = QString::fromUtf8(path.data());
+    QFileInfo inf(QDir(qf), file);
+    text absFilePath = +QDir::toNativeSeparators(inf.absoluteFilePath());
+    QFile f(+absFilePath);
+    if (!f.open(QIODevice::ReadOnly))
+    {
+        error = QString("File not found or unreadable: $1\n"
+                       "File path: %1").arg(+absFilePath);
+        return;
+    }
+
+    if (!fileMonitor)
+    {
+        fileMonitor = tao->newFileMonitor(0, fileChangedStatic, 0, this,
+                                                "NodeJS:" + +name);
+        tao->fileMonitorRemoveAllPaths(fileMonitor);
+        tao->fileMonitorAddPath(fileMonitor, absFilePath);
+    }
+
     setWorkingDirectory(+path);
 
     IFTRACE(nodejs)
@@ -249,9 +273,10 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
     connect(this, SIGNAL(readyReadStandardError()),
             this, SLOT(onReadyReadStandardError()));
 
+
     QString node = "node";
     QStringList args;
-    args << file;
+    args << +absFilePath;
     start(node, args);
 }
 
@@ -262,8 +287,11 @@ NodeJSProcess::~NodeJSProcess()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(nodejs)
-        debug() << "Destructor\n";
+        debug() << "Destructor stopping process\n";
     close();
+
+    if (fileMonitor)
+        NodeJSFactory::instance()->tao->deleteFileMonitor(fileMonitor);
 }
 
 
@@ -320,6 +348,41 @@ void NodeJSProcess::onReadyReadStandardError()
 // ----------------------------------------------------------------------------
 {
     std::cerr << +QString::fromLocal8Bit(readAllStandardError());
+}
+
+
+void NodeJSProcess::fileChanged()
+// ----------------------------------------------------------------------------
+//   Stop and restart process because file has changed
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(nodejs)
+        debug() << "Source file changed, stopping process\n";
+
+    close();
+    waitForFinished();
+
+    IFTRACE(nodejs)
+        debug() << "Restarting process\n";
+
+    QString node = "node";
+    QStringList args;
+    args << file;
+    start(node, args);
+}
+
+
+void NodeJSProcess::fileChangedStatic(std::string path,
+                                      std::string absolutePath, void *obj)
+// ----------------------------------------------------------------------------
+//   Interface with file monitor
+// ----------------------------------------------------------------------------
+{
+    Q_UNUSED(path);
+    Q_UNUSED(absolutePath);
+
+    NodeJSProcess * proc = (NodeJSProcess *)obj;
+    proc->fileChanged();
 }
 
 
