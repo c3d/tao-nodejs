@@ -320,7 +320,7 @@ void NodeJSProcess::onReadyReadStandardOutput()
         IFTRACE(nodejs)
             debug() << "stdout [" << +sline << "]\n";
 
-        static QRegExp re("^CB/(.*)");
+        static QRegExp re("^tao\\.(.*)");
         if (re.indexIn(sline) != -1)
         {
             // Callback command for Tao
