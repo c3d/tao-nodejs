@@ -175,6 +175,7 @@ void NodeJSFactory::stopAll()
 {
     foreach (NodeJSProcess * proc, processes)
         delete proc;
+    processes.clear();
 }
 
 
