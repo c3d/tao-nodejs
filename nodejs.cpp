@@ -54,27 +54,28 @@ XL::Name_p NodeJSFactory::nodejs(XL::Context *context, XL::Tree_p self,
 // ----------------------------------------------------------------------------
 {
     NodeJSFactory * f = instance();
-    f->tao->refreshOn(QEvent::Timer, f->tao->currentTime() + 0.1 /*-1.0*/);
+    NodeJSProcess * proc;
     if (f->processes.contains(+name))
     {
-        NodeJSProcess * proc = f->processes[+name];
+        proc = f->processes[+name];
         if (+src != proc->src)
         {
             IFTRACE(nodejs)
                 f->debug() << "Source code changed\n";
             delete proc;
-            f->run(name, src);
+            proc = f->run(name, src);
         }
         else
         {
             // See if we have pending callbacks to run in the XL context
             proc->runCallbacks(context, self);
-            Q_UNUSED(context);
         }
-        return XL::xl_true;
     }
-
-    f->run(name, src);
+    else
+    {
+        proc = f->run(name, src);
+    }
+    f->tao->refreshOn(proc->userEvent, 0);
     return XL::xl_true;
 }
 
@@ -86,26 +87,28 @@ XL::Name_p NodeJSFactory::nodejs_load(XL::Context *context, XL::Tree_p self,
 // ----------------------------------------------------------------------------
 {
     NodeJSFactory * f = instance();
-    f->tao->refreshOn(QEvent::Timer, f->tao->currentTime() + 0.1 /*-1.0*/);
+    NodeJSProcess * proc;
     if (f->processes.contains(+name))
     {
-        NodeJSProcess * proc = f->processes[+name];
+        proc = f->processes[+name];
         if (+file != proc->file)
         {
             IFTRACE(nodejs)
                 f->debug() << "File name changed\n";
             delete proc;
-            f->runFile(name, file);
+            proc = f->runFile(name, file);
         }
         else
         {
             // See if we have pending callbacks to run in the XL context
             proc->runCallbacks(context, self);
         }
-        return XL::xl_true;
     }
-
-    f->runFile(name, file);
+    else
+    {
+        proc = f->runFile(name, file);
+    }
+    f->tao->refreshOn(proc->userEvent, 0);
     return XL::xl_true;
 }
 
@@ -212,7 +215,8 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 // ----------------------------------------------------------------------------
 //   Create and start a subprocess and make it run the specified code
 // ----------------------------------------------------------------------------
-    : QProcess(parent), name(name), src(src), fileMonitor(NULL)
+    : QProcess(parent), name(name), src(src),
+      userEvent(QEvent::registerEventType()), fileMonitor(NULL)
 {
     std::string path = NodeJSFactory::instance()->tao->currentDocumentFolder();
     setWorkingDirectory(+path);
@@ -237,7 +241,8 @@ NodeJSProcess::NodeJSProcess(QObject *parent, const QString name,
 // ----------------------------------------------------------------------------
 //   Create and start a subprocess and make it run the specified source file
 // ----------------------------------------------------------------------------
-    : QProcess(parent), name(name), file(file), fileMonitor(NULL)
+    : QProcess(parent), name(name), file(file),
+      userEvent(QEvent::registerEventType()), fileMonitor(NULL)
 {
     Q_UNUSED(unused);
 
@@ -328,6 +333,7 @@ void NodeJSProcess::onReadyReadStandardOutput()
             IFTRACE(nodejs)
                 debug() << "Pushing callback request\n";
             commands.append(re.cap(1));
+            NodeJSFactory::instance()->tao->postEventOnce(userEvent);
         }
         else
         {

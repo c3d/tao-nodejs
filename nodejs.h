@@ -135,6 +135,7 @@ protected slots:
 
 public:
     QString                name, src, file, error;
+    int                    userEvent;
 
 protected:
     QByteArray             out;
