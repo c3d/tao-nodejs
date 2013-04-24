@@ -256,13 +256,11 @@ boolean nodejs_writeln(str:text);
  * @~english
  * Sends @p str followed by an end-of-line to the NodeJS suprocess called
  * @p name.
- * If the NodeJS process is running, this primitive returns @c true, otherwise
- * it returns @c false.
+ * This primitive is equivalent to <tt>nodejs_writeln "default", str</tt>.
  *
  * @~french
  * Envoie @p str et une fin de ligne au processus NodeJS nommé @p name.
- * Si le processus est en cours d'exécution, cette primitive retourne @c true,
- * sinon @c false.
+ * Cette primitive est équivalente à <tt>nodejs_writeln "default", str</tt>.
  * @~
  */
 boolean nodejs_writeln(name:text, str:text);
