@@ -17,7 +17,7 @@ module_description
                   "installed on this computer (the 'node' command). " &
                   "You may want to install NodeJS from http://nodejs.org/ " &
                   "and try again."
-    version 1.002
+    version 1.0
 
 
 module_description "fr",
@@ -25,7 +25,7 @@ module_description "fr",
     description "Permet d'exécuter du code JavaScript dans un processus " &
                 "NodeJS, d'appeler du JavaScript depuis Tao et réciproquement."
     on_load_error "Impossible de charger le module NodeJS. " &
-                  "La cause la plus fréquente de cette erreur est que NodeJS " &
+                  "La cuase la plus fréquente de cette erreur est que NodeJS " &
                   "n'est pas installé sur cet ordinateur (la commande " &
                   "« node »). Vous pouvez installer NodeJS depuis " &
                   "http://nodejs.org/ et essayer à nouveau."
