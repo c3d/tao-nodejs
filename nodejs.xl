@@ -17,7 +17,7 @@ module_description
                   "installed on this computer (the 'node' command). " &
                   "You may want to install NodeJS from http://nodejs.org/ " &
                   "and try again."
-    version 1.002
+    version 1.0
 
 
 module_description "fr",
