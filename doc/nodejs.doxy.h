@@ -1,9 +1,8 @@
 /**
  * @~english
  * @taomoduledescription{NodeJS, NodeJS interface}
- *
- * Execute JavaScript code inside a NodeJS subprocess. Call JavaScript from
- * Tao and vice versa.
+ * <tt>import NodeJS</tt> - Execute JavaScript code inside a NodeJS subprocess,
+ * call JavaScript from Tao and vice versa.@n
  *
  * The NodeJS code can be read from a file with @ref nodejs_load.
  *
@@ -79,9 +78,8 @@ Tao says: Hi from Node #1
  *
  * @~french
  * @taomoduledescription{NodeJS, Interface NodeJS}
- *
- * Permet d'exécuter du code JavaScript dans un processus NodeJS, d'appeler du
- * JavaScript depuis Tao et réciproquement.
+ * <tt>import NodeJS</tt> - Permet d'exécuter du code JavaScript dans un
+ * processus NodeJS, d'appeler du JavaScript depuis Tao et réciproquement.@n
  *
  * Le code NodeJS peut être lu depuis un fichier grâce à @ref nodejs_load.
  *
