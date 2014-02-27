@@ -1,29 +1,28 @@
 /**
  * @~english
  * @taomoduledescription{NodeJS, NodeJS interface}
- *
- * Execute JavaScript code inside a NodeJS subprocess. Call JavaScript from
- * Tao and vice versa.
+ * <tt>import NodeJS</tt> - Execute JavaScript code inside a NodeJS subprocess,
+ * call JavaScript from Tao and vice versa.@n
  *
  * The NodeJS code can be read from a file with @ref nodejs_load.
  *
- * @code
+@code
 import NodeJS
 
 nodejs_load "file.js"
- * @endcode
+@endcode
  *
  * Or, you may pass the source as an argument to @ref nodejs.
- * @code
+@code
 import NodeJS
 
 nodejs "console.log('NodeJS version is: ' + process.version);"
- * @endcode
+@endcode
  *
  * Any data read from Node's @c stderr are sent to Tao's own @c stderr.
  * The same goes for @c stdout, except that lines starting with the characters
  * <tt>tao.</tt> are interpreted as XL code and evaluated by Tao.
- * @code
+@code
 import NodeJS
 
 nodejs <<
@@ -31,7 +30,7 @@ nodejs <<
     console.error('This goes to Tao\'s stderr');
     console.log('tao.writeln "This is displayed by Tao\'s writeln function"');
 >>
- * @endcode
+@endcode
  *
 @verbatim
 This goes to Tao's stdout
@@ -46,7 +45,7 @@ This is displayed by Tao's writeln function
  * Several NodeJS processes may be run concurrently: just give a name to each
  * process when you call @ref nodejs or @ref nodejs_load.
  *
- * @code
+@code
 import NodeJS
 
 nodejs "#1", <<
@@ -66,7 +65,7 @@ nodejs "#2", <<
 
 send_to_node_2 Message:text ->
   nodejs_writeln "#2", Message
- * @endcode
+@endcode
  *
  * The above code will print:
  *
@@ -79,31 +78,30 @@ Tao says: Hi from Node #1
  *
  * @~french
  * @taomoduledescription{NodeJS, Interface NodeJS}
- *
- * Permet d'exécuter du code JavaScript dans un processus NodeJS, d'appeler du
- * JavaScript depuis Tao et réciproquement.
+ * <tt>import NodeJS</tt> - Permet d'exécuter du code JavaScript dans un
+ * processus NodeJS, d'appeler du JavaScript depuis Tao et réciproquement.@n
  *
  * Le code NodeJS peut être lu depuis un fichier grâce à @ref nodejs_load.
  *
- * @code
+@code
 import NodeJS
 
 nodejs_load "file.js"
- * @endcode
+@endcode
  *
  * Ou bien vous pouvez passer directement le code source à @ref nodejs :
- * @code
+@code
 import NodeJS
 
 nodejs "console.log('La version de NodeJS est : ' + process.version);"
- * @endcode
+@endcode
  *
  * Tout ce qui est lu depuis le canal @c stderr du processus Node est envoyé
  * sur le canal @c stderr de Tao.
  * De même pour @c stdout, sauf que les lignes qui commencent
  * par les caractères <tt>tao.</tt> sont supposées être du code XL et sont
  * évaluées par Tao.
- * @code
+@code
 import NodeJS
 
 nodejs <<
@@ -111,7 +109,7 @@ nodejs <<
     console.error('Ce message va vers stderr de Tao');
     console.log('tao.writeln "Ceci est affiché par la primitive writeln de Tao"');
 >>
- * @endcode
+@endcode
  *
 @verbatim
 Ce message va vers stderr de Tao
@@ -127,7 +125,7 @@ Ceci est affiché par la primitive writeln de Tao
  * cela de donner un nom différent à chacun lors de l'appel à @ref nodejs ou
  * @ref nodejs_load.
  *
- * @code
+@code
 import NodeJS
 
 nodejs "1", <<
@@ -147,7 +145,7 @@ nodejs "2", <<
 
 send_to_node_2 Message:text ->
   nodejs_writeln "2", Message
- * @endcode
+@endcode
  *
  * Le code ci-dessus affiche:
  *
@@ -173,7 +171,7 @@ Tao dit: Salut depuis Node 1
  * Le processus est redémarré automatiquement lorsque @p src change.
  * Cette primitive est équivalente à <tt>nodejs "default", src</tt>.
  * @~
- * @code
+@code
 import NodeJS
 
 nodejs <<
@@ -181,7 +179,7 @@ nodejs <<
     console.log('Hello');
   }, 2000);
 >>
- * @endcode
+@endcode
  */
 
 boolean nodejs(src:text);
@@ -192,7 +190,7 @@ boolean nodejs(src:text);
  * @~french
  * Lance un processus fils NodeJS nommé @p name, et exécute @p src.
  * @~
- * @code
+@code
 import NodeJS
 
 nodejs "A", <<
@@ -207,7 +205,7 @@ nodejs "B", <<
         console.log('tao.exit 0');
     }, 5500);
 >>
- * @endcode
+@endcode
  */
 
 boolean nodejs(name: text, src:text);
