@@ -342,7 +342,7 @@ void NodeJSProcess::onReadyReadStandardOutput()
         }
 
         int keep = out.length() - eol - 1;
-        Q_ASSERT(keep >= 0);
+        XL_ASSERT(keep >= 0);
         out = out.right(keep);
         eol = out.indexOf('\n');
     }
